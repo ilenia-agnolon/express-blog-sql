@@ -1,6 +1,9 @@
 //import dei dati nel controller
 const posts = require("../data/posts");
 
+//import della connessione nel controller dei post
+const db = require("../data/db");
+
 /******************************************************************************/
 
 // INDEX -> GET /posts -> restituisce la lista aggiornata di posts.js
