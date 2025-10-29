@@ -6,8 +6,8 @@ const db = require("../data/db"); // connessione MySQL
 
 /******************************************************************************/
 
-// INDEX -> GET /posts -> restituisce la lista aggiornata di posts.js
-const index = (req, res) => {
+// INDEX (NUOVA VERSIONE)
+function index(req, res) {
   const sql = "SELECT * FROM posts";
 
   db.query(sql, (err, results) => {
@@ -17,31 +17,45 @@ const index = (req, res) => {
     }
     res.json(results);
   });
-};
+}
 
 /******************************************************************************/
-// SHOW -> GET /posts/:id -> dà/fornisce un singolo post
+// SHOW (NUOVA VERSIONE)
 function show(req, res) {
-  //prendo il valore del parametro "id" dall'URL (es. /posts/3) e lo converto in numero intero
-  const id = parseInt(req.params.id);
+  // recuperiamo l'id dall'URL
+  const id = req.params.id;
 
-  //cerco nell'array "posts" il primo oggetto che ha un id uguale a quello passato nell'URL
-  const post = posts.find((post) => post.id === id);
+  // prima query: cerchiamo il post con quell'id
+  const postSql = "SELECT * FROM posts WHERE id = ?";
 
-  if (!post) {
-    //status 404
-    res.status(404);
+  // seconda query: cerchiamo tutti i tag collegati a quel post
+  const tagsSql = `
+        SELECT T.*
+        FROM tags T
+        JOIN post_tag AS PT ON T.id = PT.tag_id
+        WHERE PT.post_id = ?;
+    `;
 
-    return res.json({
-      error: "Not Found",
-      message: "Post non trovato",
+  // eseguiamo la prima query (post singolo)
+  db.query(postSql, [id], (err, postResults) => {
+    if (err) return res.status(500).json({ error: "Database query failed" });
+    if (postResults.length === 0)
+      return res.status(404).json({ error: "Post not found" });
+
+    // recuperiamo il post
+    const post = postResults[0];
+
+    // se il post esiste, eseguiamo la query per i tag
+    db.query(tagsSql, [id], (err, tagsResults) => {
+      if (err) return res.status(500).json({ error: "Database query failed" });
+
+      // aggiungiamo i tag al post
+      post.tags = tagsResults;
+
+      // rispondiamo con il post completo
+      res.json(post);
     });
-  }
-  res.json(post);
-
-  // if (!post) {
-  //   return res.status(404).json({ messaggio: "non trovato" });
-  // }
+  });
 }
 
 /******************************************************************************/
