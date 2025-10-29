@@ -156,33 +156,24 @@ function modify(req, res) {
 
 /******************************************************************************/
 
-// DESTROY -> DELETE /posts/:id -> elimina un post
+// DESTROY (NUOVA VERSIONE)
 function destroy(req, res) {
-  // recupero id
-  const id = parseInt(req.params.id);
+  // recuperiamo l'id dall'URL
+  const { id } = req.params;
 
-  // cerco il post tramite id
-  const post = posts.find((post) => post.id === id);
+  // query SQL per eliminare il post
+  const sql = "DELETE FROM posts WHERE id = ?";
 
-  //404
-  if (!post) {
-    res.status(404);
+  // eliminiamo il post dal database
+  db.query(sql, [id], (err) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ error: "Errore durante l'eliminazione del post" });
 
-    return res.json({
-      status: 404,
-      error: "Not Found",
-      message: "Post non trovato",
-    });
-  }
-
-  // rimuovo il post dal blog
-  posts.splice(posts.indexOf(post), 1);
-
-  //controllo con console log in terminale
-  console.log(posts);
-
-  // invio la risposta con lo stato che conferma l'eliminazione riuscita
-  res.sendStatus(204);
+    // 204 = No Content → eliminazione riuscita, nessun body nella risposta
+    res.sendStatus(204);
+  });
 }
 
 /******************************************************************************/
