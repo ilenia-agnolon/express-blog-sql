@@ -2,17 +2,22 @@
 const posts = require("../data/posts");
 
 //import della connessione nel controller dei post
-const db = require("../data/db");
+const db = require("../data/db"); // connessione MySQL
 
 /******************************************************************************/
 
 // INDEX -> GET /posts -> restituisce la lista aggiornata di posts.js
-function index(req, res) {
-  //errore 500
-  pluto500.get();
+const index = (req, res) => {
+  const sql = "SELECT * FROM posts";
 
-  res.json(posts);
-}
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("❌ Errore query:", err);
+      return res.status(500).json({ error: "Errore interno del server" });
+    }
+    res.json(results);
+  });
+};
 
 /******************************************************************************/
 // SHOW -> GET /posts/:id -> dà/fornisce un singolo post
